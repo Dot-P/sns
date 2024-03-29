@@ -1,4 +1,4 @@
-package repository
+package repositories
 
 import (
 	"database/sql"
@@ -53,7 +53,7 @@ func SelectArticleList(db *sql.DB, page int) ([]models.Article, error) {
 func SelectArticleDetail(db *sql.DB, articleID int) (models.Article, error) {
 	const sqlStr = `
 	select *
-	from article
+	from articles
 	where article_id = ?;
 	`
 	row := db.QueryRow(sqlStr, articleID)
