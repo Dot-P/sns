@@ -79,7 +79,7 @@ func SelectArticleDetail(db *sql.DB, articleID int) (models.Article, error) {
 func UpdateNiceNum(db *sql.DB, articleID int) error {
 	const sqlGetNice = `
 	select nice
-	from article
+	from articles
 	where article_id = ?;
 	`
 

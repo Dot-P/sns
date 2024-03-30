@@ -6,6 +6,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/sns/backend/models"
 	"github.com/sns/backend/repositories"
+	"github.com/sns/backend/repositories/testdata"
 )
 
 func TestSelectArticleDetail(t *testing.T) {
@@ -17,23 +18,11 @@ func TestSelectArticleDetail(t *testing.T) {
 		{
 			// 記事 ID1 番のテストデータ
 			testTitle: "subtest1",
-			expected: models.Article{
-				ID:       1,
-				Title:    "firstPost",
-				Contents: "This is my first blog",
-				UserName: "saki",
-				NiceNum:  2,
-			},
+			expected:  testdata.ArticleTestData[0],
 		}, {
 			// 記事 ID2 番のテストデータ
 			testTitle: "subtest2",
-			expected: models.Article{
-				ID:       2,
-				Title:    "2nd",
-				Contents: "Second blog post",
-				UserName: "saki",
-				NiceNum:  4,
-			},
+			expected:  testdata.ArticleTestData[1],
 		},
 	}
 
@@ -72,5 +61,54 @@ func TestSelectArticleList(t *testing.T) {
 
 	if num := len(got); num != expectedNum {
 		t.Errorf("want %d but got %d articles\n", expectedNum, num)
+	}
+}
+
+func TestInsertArticle(t *testing.T) {
+	article := models.Article{
+		Title:    "insertTest",
+		Contents: "testest",
+		UserName: "saki",
+	}
+
+	expectedArticleNum := 3
+
+	newArticle, err := repositories.InsertArticle(testDB, article)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if newArticle.ID != expectedArticleNum {
+		t.Errorf("new article id is expected %d but got %d\n", expectedArticleNum, newArticle.ID)
+	}
+
+	t.Cleanup(func() {
+		const sqlStr = `
+		delete from articles
+		where title = ? and contents = ? and username = ?
+		`
+		_, err := testDB.Exec(sqlStr, article.Title, article.Contents, article.UserName)
+		if err != nil {
+			t.Errorf("failed to delete article: %v", err)
+		}
+	})
+}
+
+func TestUpdateNiceNum(t *testing.T) {
+	const articleID = 1
+	before, err := repositories.SelectArticleDetail(testDB, articleID)
+	if err != nil {
+		t.Fatal("fail to get before data")
+	}
+	err = repositories.UpdateNiceNum(testDB, articleID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	after, err := repositories.SelectArticleDetail(testDB, articleID)
+	if err != nil {
+		t.Fatal("fail to get before data")
+	}
+	if after.NiceNum-before.NiceNum != 1 {
+		t.Error("fail to update nice num")
 	}
 }
