@@ -53,7 +53,7 @@ func TestSelectArticleDetail(t *testing.T) {
 
 func TestSelectArticleList(t *testing.T) {
 
-	expectedNum := 2
+	expectedNum := len(testdata.ArticleTestData)
 	got, err := repositories.SelectArticleList(testDB, 1)
 	if err != nil {
 		t.Fatal(err)
