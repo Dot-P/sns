@@ -8,6 +8,20 @@ import (
 	"github.com/sns/backend/repositories"
 )
 
+func TestSelectCommentList(t *testing.T) {
+	articleID := 1
+	got, err := repositories.SelectCommentList(testDB, articleID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, comment := range got {
+		if comment.ArticleID != articleID {
+			t.Errorf("want comment of articleID %d but got ID %d\n", articleID, comment.ArticleID)
+		}
+	}
+}
+
 func TestInsertComment(t *testing.T) {
 	comment := models.Comment{
 		ArticleID: 1,
