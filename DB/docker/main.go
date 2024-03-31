@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	"dbsample/models"
 
@@ -10,9 +11,9 @@ import (
 )
 
 func main() {
-	dbUser := "docker" // 後に修正
-	dbPassword := "docker"
-	dbDatabase := "sampledb"
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbDatabase := os.Getenv("DB_NAME")
 	dbConn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:13306)/%s?parseTime=true", dbUser, dbPassword, dbDatabase)
 
 	db, err := sql.Open("mysql", dbConn)
