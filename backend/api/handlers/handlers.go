@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/sns/backend/models"
+	"github.com/sns/backend/services"
 
 	"github.com/gorilla/mux"
 )
@@ -14,6 +15,7 @@ import (
 func HelloHandler(w http.ResponseWriter, req *http.Request) {
 	io.WriteString(w, "hello, world!\n")
 }
+
 func PostArticleHandler(w http.ResponseWriter, req *http.Request) {
 
 	var reqArticle models.Article
@@ -21,10 +23,15 @@ func PostArticleHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "fail to decode json/n", http.StatusBadRequest)
 	}
 
-	article := reqArticle
+	article, err := services.PostArticleService(reqArticle)
+	if err != nil {
+		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(article)
 }
+
 func ArticleListHandler(w http.ResponseWriter, req *http.Request) {
 	queryMap := req.URL.Query()
 
@@ -39,12 +46,16 @@ func ArticleListHandler(w http.ResponseWriter, req *http.Request) {
 	} else {
 		page = 1
 	}
-	println(page)
 
-	article := []models.Article{models.Article1, models.Article2}
+	articleList, err := services.GetArticleListService(page)
+	if err != nil {
+		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
+		return
+	}
 
-	json.NewEncoder(w).Encode(article)
+	json.NewEncoder(w).Encode(articleList)
 }
+
 func ArticleDetailHandler(w http.ResponseWriter, req *http.Request) {
 	articleID, err := strconv.Atoi(mux.Vars(req)["id"])
 	if err != nil {
@@ -52,12 +63,15 @@ func ArticleDetailHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	println(articleID)
-
-	article := models.Article1
+	article, err := services.GetArticleService(articleID)
+	if err != nil {
+		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(article)
 }
+
 func PostNiceHandler(w http.ResponseWriter, req *http.Request) {
 	var reqArticle models.Article
 
@@ -66,10 +80,15 @@ func PostNiceHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	article := reqArticle
+	article, err := services.PostNiceService(reqArticle)
+	if err != nil {
+		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(article)
 }
+
 func PostCommentHandler(w http.ResponseWriter, req *http.Request) {
 	var reqComment models.Comment
 
@@ -78,7 +97,11 @@ func PostCommentHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	article := reqComment
+	comment, err := services.PostCommentService(reqComment)
+	if err != nil {
+		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
+		return
+	}
 
-	json.NewEncoder(w).Encode(article)
+	json.NewEncoder(w).Encode(comment)
 }
