@@ -1,25 +1,27 @@
 package services
 
 import (
+	"database/sql"
+	"errors"
+
+	"github.com/sns/backend/apperrors"
 	"github.com/sns/backend/models"
 	"github.com/sns/backend/repositories"
 )
 
-func GetArticleService(articleID int) (models.Article, error) {
-
-	db, err := connectDB()
+func (s *MyAppService) GetArticleService(articleID int) (models.Article, error) {
+	article, err := repositories.SelectArticleDetail(s.db, articleID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			err = apperrors.NAData.Wrap(err, "no data")
+			return models.Article{}, err
+		}
+		err = apperrors.GetDataFailed.Wrap(err, "fail to get data")
 		return models.Article{}, err
 	}
-	defer db.Close()
-
-	article, err := repositories.SelectArticleDetail(db, articleID)
+	commentList, err := repositories.SelectCommentList(s.db, articleID)
 	if err != nil {
-		return models.Article{}, err
-	}
-
-	commentList, err := repositories.SelectCommentList(db, articleID)
-	if err != nil {
+		err = apperrors.GetDataFailed.Wrap(err, "fail to get data")
 		return models.Article{}, err
 	}
 
@@ -28,49 +30,38 @@ func GetArticleService(articleID int) (models.Article, error) {
 	return article, nil
 }
 
-func PostArticleService(article models.Article) (models.Article, error) {
-
-	db, err := connectDB()
+func (s *MyAppService) PostArticleService(article models.Article) (models.Article, error) {
+	newArticle, err := repositories.InsertArticle(s.db, article)
 	if err != nil {
+		err = apperrors.InsertDataFailed.Wrap(err, "fail to record data")
 		return models.Article{}, err
 	}
-	defer db.Close()
-
-	newArticle, err := repositories.InsertArticle(db, article)
-	if err != nil {
-		return models.Article{}, err
-	}
-
 	return newArticle, nil
-
 }
 
-func GetArticleListService(page int) ([]models.Article, error) {
-
-	db, err := connectDB()
+func (s *MyAppService) GetArticleListService(page int) ([]models.Article, error) {
+	articleList, err := repositories.SelectArticleList(s.db, page)
 	if err != nil {
+		err = apperrors.GetDataFailed.Wrap(err, "fail to get data")
 		return nil, err
 	}
-	defer db.Close()
 
-	articleList, err := repositories.SelectArticleList(db, page)
-	if err != nil {
+	if len(articleList) == 0 {
+		err := apperrors.NAData.Wrap(ErrNoData, "no data")
 		return nil, err
 	}
 
 	return articleList, nil
 }
 
-func PostNiceService(article models.Article) (models.Article, error) {
-
-	db, err := connectDB()
+func (s *MyAppService) PostNiceService(article models.Article) (models.Article, error) {
+	err := repositories.UpdateNiceNum(s.db, article.ID)
 	if err != nil {
-		return models.Article{}, err
-	}
-	defer db.Close()
-
-	err = repositories.UpdateNiceNum(db, article.ID)
-	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			err = apperrors.NoTargetData.Wrap(err, "does not exist target article")
+			return models.Article{}, err
+		}
+		err = apperrors.UpdateDataFailed.Wrap(err, "fail to update nice count")
 		return models.Article{}, err
 	}
 
