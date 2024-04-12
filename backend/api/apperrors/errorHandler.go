@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/sns/backend/api/middlewares"
+	"github.com/sns/backend/common"
 )
 
 func ErrorHandler(w http.ResponseWriter, req *http.Request, err error) {
@@ -19,7 +19,7 @@ func ErrorHandler(w http.ResponseWriter, req *http.Request, err error) {
 		}
 	}
 
-	traceID := middlewares.GetTraceID(req.Context())
+	traceID := common.GetTraceID(req.Context())
 	log.Printf("[%d]error: %s\n", traceID, appErr)
 
 	var statusCode int
@@ -29,6 +29,8 @@ func ErrorHandler(w http.ResponseWriter, req *http.Request, err error) {
 		statusCode = http.StatusNotFound
 	case NoTargetData, ReqBodyDecodeFailed, BadParam:
 		statusCode = http.StatusBadRequest
+	case RequiredAuthorizationHeader, Unauthorizated:
+		statusCode = http.StatusUnauthorized
 	default:
 		statusCode = http.StatusInternalServerError
 	}

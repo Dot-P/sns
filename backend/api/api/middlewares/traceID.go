@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"context"
 	"sync"
 )
 
@@ -22,14 +21,4 @@ func newTraceID() int {
 	mu.Unlock()
 
 	return no
-}
-
-func GetTraceID(ctx context.Context) int {
-	id := ctx.Value(traceIDKey{})
-
-	if idInt, ok := id.(int); ok {
-		return idInt
-	}
-
-	return 0
 }
