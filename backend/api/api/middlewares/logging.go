@@ -1,9 +1,10 @@
 package middlewares
 
 import (
-	"context"
 	"log"
 	"net/http"
+
+	"github.com/sns/backend/common"
 )
 
 type resLoggingWriter struct {
@@ -27,8 +28,7 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 
 		log.Printf("[%d]%s %s\n", traceID, req.RequestURI, req.Method)
 
-		ctx := context.WithValue(req.Context(), traceIDKey{}, traceID)
-
+		ctx := common.SetTraceID(req.Context(), traceID)
 		req = req.WithContext(ctx)
 		rlw := NewResLoggingWriter(w)
 
